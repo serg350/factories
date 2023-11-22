@@ -17,7 +17,7 @@ class Postgres(BaseSettings):
     echo: bool = Field(default=False, env="POSTGRES_ECHO")
 
     def dsn(self):
-        return f"postgresql+psycopg://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 
     class Config:
         env_file = env_file

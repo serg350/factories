@@ -22,6 +22,10 @@ class Factory(Base):
     address = Column(String)
     reviews = relationship("Review", back_populates="factory")
 
+    def __init__(self, name: str, address: str) -> None:
+        self.name = name
+        self.address = address
+
 
 class FactoryCreate(BaseModel):
     name: str
