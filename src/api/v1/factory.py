@@ -68,7 +68,6 @@ async def get_factory(
 
 @router.post(
     "/factories/{factory_id}/reviews",
-    response_model=ReviewCreate,
     summary="Создание отзыва о фабрике",
     description="Создание отзыва о фабрике",
     status_code=fastapi_status.HTTP_201_CREATED,
