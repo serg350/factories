@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.postgres import get_session
 from db.storage import Status, Result
-from models.model import FactoryCreate, Factory
+from models.model import FactoryCreate, Factory, Review, ReviewCreate
 from services.factory import FactoryService, get_factory_service
 
 router = APIRouter()
@@ -64,3 +64,22 @@ async def get_factory(
         raise HTTPException(status_code=fastapi_status.HTTP_404_NOT_FOUND, detail="Select error.")
 
     return result
+
+
+@router.post(
+    "/factories/{factory_id}/reviews",
+    response_model=ReviewCreate,
+    summary="Создание отзыва о фабрике",
+    description="Создание отзыва о фабрике",
+    status_code=fastapi_status.HTTP_201_CREATED,
+)
+async def create_factory(
+        factory_id: UUID,
+        review: ReviewCreate,
+        factory_service: FactoryService = Depends(get_factory_service),
+        session: AsyncSession = Depends(get_session),
+):
+    res = await factory_service.create_review(factory_id=factory_id, review=review, session=session)
+    if res["status"] != HTTPStatus.CREATED:
+        raise HTTPException(status_code=res["status"], detail=res["message"])
+    return res

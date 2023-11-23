@@ -1,11 +1,19 @@
+import enum
 import uuid
 
-from pydantic import BaseModel
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float
+from pydantic import BaseModel, Field
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Enum
 
 from db.postgres import Base
+
+
+class SatisfactionLevelEnum(enum.Enum):
+    Great = 'Отлично'
+    Normally = 'Нормально'
+    Badly = 'Плохо'
 
 
 class Factory(Base):
@@ -41,12 +49,15 @@ class Review(Base):
         unique=True,
         nullable=False,
     )
-    rating = Column(Float)
-    satisfaction_level = Column(String)
+    rating = Column(Float, CheckConstraint('rating>=1 AND rating<=5'))
+    satisfaction_level = Column(Enum(SatisfactionLevelEnum))
     factory_id = Column(UUID, ForeignKey("factories.id"))
     factory = relationship("Factory", back_populates="reviews")
 
 
 class ReviewCreate(BaseModel):
-    rating: float
-    satisfaction_level: str
+    rating: float = Field(..., gt=0, lt=5.1, description='The rating must be between 1 and 5')
+    satisfaction_level: SatisfactionLevelEnum = Field(...,
+                                                      description="Satisfaction level must be one of "
+                                                                  "[Great = 'Отлично', Normally = 'Нормально',"
+                                                                  "Badly = 'Плохо'")

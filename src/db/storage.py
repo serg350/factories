@@ -8,8 +8,9 @@ from fastapi import Depends
 from sqlalchemy.exc import IntegrityError, DatabaseError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload, joinedload
 
-from models.model import Base, Factory
+from models.model import Base, Factory, ReviewCreate, Review
 from db.postgres import get_session
 from models.model import FactoryCreate
 
@@ -33,9 +34,9 @@ class AbstractStorage(abc.ABC):
     async def create_factory(self, *args, **kwargs):
         ...
 
-    # @abc.abstractmethod
-    # async def create_review_for_factory(self, *args, **kwargs):
-    #    ...
+    @abc.abstractmethod
+    async def create_review_for_factory(self, *args, **kwargs):
+        ...
 
     @abc.abstractmethod
     async def get_factories(self, *args, **kwargs):
@@ -87,9 +88,23 @@ class PostgresStorage(AbstractStorage):
         return Result(status=Status.OK, data=data.all())
 
     async def get_factory(self, factory_id: UUID):
-        query = select(Factory).where(Factory.id == factory_id)
+        query = select(Factory).options(joinedload(Factory.reviews)).filter(Factory.id == factory_id)
+        #query = select(Factory).options(joinedload(Factory.reviews)).where(Factory.id == factory_id)
         data = await self.session.execute(query)
-        return Result(status=Status.OK, data=data.one_or_none())
+        return Result(status=Status.OK, data=data.first())
+
+    async def create_review_for_factory(self, factory_id: UUID, review: ReviewCreate, session=None):
+        review = Review(factory_id=str(factory_id), **review.dict())
+        self.session.add(review)
+        await self.session.commit()
+        await self.session.refresh(review)
+        print(review)
+        return dict(
+            status=HTTPStatus.CREATED,
+            message="Review create",
+            data=review,
+            state=Status.OK,
+        )
 
 
 async def get_storage(session: AsyncSession = Depends(get_session)) -> AbstractStorage:

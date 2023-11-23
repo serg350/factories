@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import Depends
 
 from db.storage import AbstractStorage, get_storage
-from models.model import FactoryCreate, Factory
+from models.model import FactoryCreate, Factory, ReviewCreate
 
 
 class FactoryService:
@@ -22,7 +22,9 @@ class FactoryService:
         result = await self.storage.get_factory(factory_id)
         return result
 
-
+    async def create_review(self, factory_id: UUID, review: ReviewCreate, session):
+        result = await self.storage.create_review_for_factory(factory_id, review, session)
+        return result
 
 
 def get_factory_service(storage: AbstractStorage = Depends(get_storage)) -> FactoryService:

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
 from api.v1 import factory
-from src.core.config import settings
+from core.config import settings
 
 app = FastAPI(
     title=settings.service_name,
